@@ -5,6 +5,8 @@
 Mission Control is a Laravel 12 application that spins up temporary QEMU virtual machines, exposes them via WebSocket,
 and renders them using noVNC - all inside your browser.
 
+<img width="1411" height="1027" alt="image" src="https://github.com/user-attachments/assets/5acc878a-dc9a-45f9-a993-6cbfce3361b9" />
+
 It was built to power the **Retro Rocket OS demo**, but it works for any QEMU-compatible OS.
 
 No systemd.
