@@ -18,18 +18,13 @@ Just Laravel, QEMU and a web server.
 
 # What It Does
 
-When someone clicks “Start session”:
+When someone clicks “Start session”, Mission Control picks a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
+The browser connects to it over WebSocket via VNC, and the operating system appears in the page.
 
-1. A free VM slot is allocated
-2. A temporary overlay disk is created
-3. QEMU launches bound to localhost
-4. WebSocket proxy connects browser → VNC
-5. Idle + hard time limits are enforced
-6. Expired sessions are killed and cleaned up
+Each session has strict idle and maximum runtime limits. When time runs out or the user leaves,
+the virtual machine is stopped, its overlay disk is deleted, and the slot is freed for the next person.
 
-Everything is ephemeral. Nothing persists.
-
-Every session gets its own qcow2 overlay disk. The base image is never modified.
+Nothing persists. Every session is isolated, and the base image is never modified.
 
 ---
 
