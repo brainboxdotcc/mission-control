@@ -51,7 +51,7 @@ return [
 
         /*
          |--------------------------------------------------------------------------
-         | Boot Mode Extensions (New)
+         | Boot Mode Extensions
          |--------------------------------------------------------------------------
          |
          | disk   = normal overlay HDD boot (default, Retro Rocket)
