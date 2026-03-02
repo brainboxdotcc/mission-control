@@ -1,4 +1,4 @@
-# Mission Control
+# <img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/90da5bb3-1e4f-4f07-896b-751318e98490" /> Mission Control
 
 ## Launch a real operating system in the browser. Safely.
 
