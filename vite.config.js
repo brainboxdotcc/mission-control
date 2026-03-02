@@ -26,7 +26,6 @@ export default defineConfig({
         target: "es2022",
     },
 
-    // This is the bit that usually fixes the “configured target environment (chrome87…)”
     optimizeDeps: {
         esbuildOptions: {
             target: "es2022",

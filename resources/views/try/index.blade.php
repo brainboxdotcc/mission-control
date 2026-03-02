@@ -46,7 +46,7 @@
 
             <div style="margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.03);">
                 <strong>Tip:</strong> click inside the screen to focus it, then type as normal.
-                If keys feel “stuck”, click outside the screen and then back in again.
+                If keys feel "stuck", click outside the screen and then back in again.
             </div>
         </div>
 

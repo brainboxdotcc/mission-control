@@ -18,7 +18,7 @@ Just Laravel, QEMU and a web server.
 
 # What It Does
 
-When someone clicks “Start session”, Mission Control picks a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
+When someone clicks "Start session", Mission Control picks a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
 The browser connects to it over WebSocket via VNC, and the operating system appears in the page.
 
 Each session has strict idle and maximum runtime limits. When time runs out or the user leaves,
