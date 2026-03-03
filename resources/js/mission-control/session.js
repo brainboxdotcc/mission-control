@@ -2,6 +2,17 @@ import RFB from "@novnc/novnc";
 
 const screen = document.getElementById("screen");
 
+let skew_ms = 0;
+let skew_set = false;
+
+function now_ms() {
+    if (!skew_set) {
+        return Date.now();
+    }
+
+    return Date.now() + skew_ms;
+}
+
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -30,7 +41,15 @@ async function touchSession(leaseId, mode) {
         return null;
     }
 
-    return await resp.json();
+    const data = await resp.json();
+
+    // Set skew once
+    if (!skew_set && data.server_now) {
+        skew_ms = new Date(data.server_now).getTime() - Date.now();
+        skew_set = true;
+    }
+
+    return data;
 }
 
 function setStatus(state, text) {
@@ -115,14 +134,14 @@ function formatDuration(seconds) {
 
 function startCountdown(deadlineIso) {
     const deadline = new Date(deadlineIso).getTime();
-    const total = Math.max(1, Math.floor((deadline - Date.now()) / 1000));
+    const total = Math.max(1, Math.floor((deadline - now_ms()) / 1000));
 
     const remainingEl = document.getElementById("time-remaining");
     const barEl = document.getElementById("time-bar");
     const warnEl = document.getElementById("session-warning");
 
     function tick() {
-        const now = Date.now();
+        const now = now_ms();
         const seconds = Math.max(0, Math.floor((deadline - now) / 1000));
 
         if (remainingEl) {
@@ -146,8 +165,14 @@ function startCountdown(deadlineIso) {
         }
 
         if (seconds <= 0) {
-            redirectHome();
-            return;
+            // Display-only: server is authoritative for expiry.
+           if (remainingEl) {
+               remainingEl.textContent = "0s";
+           }
+           if (warnEl) {
+               warnEl.style.display = "block";
+           }
+           return;
         }
 
         setTimeout(tick, 1000);

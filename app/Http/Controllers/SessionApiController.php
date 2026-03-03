@@ -53,6 +53,7 @@ final class SessionApiController extends Controller
 
         return response()->json([
             'ok' => true,
+            'server_now' => $now->toIso8601String(),
             'hard_deadline_at' => $lease->hard_deadline_at->toIso8601String(),
             'idle_deadline_at' => $lease->idle_deadline_at->toIso8601String(),
         ]);
@@ -90,7 +91,7 @@ final class SessionApiController extends Controller
 
             $pid = $lease->pid;
             if (is_int($pid) && $pid > 0) {
-                @posix_kill($pid, SIGTERM);
+                @posix_kill($pid, 15);
 
                 // Give it a moment to exit cleanly
                 for ($i = 0; $i < 20; $i++) {
