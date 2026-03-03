@@ -2,23 +2,46 @@ import RFB from "@novnc/novnc";
 
 const screen = document.getElementById("screen");
 
-let skew_ms = 0;
-let skew_set = false;
-
-function now_ms() {
-    if (!skew_set) {
-        return Date.now();
-    }
-
-    return Date.now() + skew_ms;
-}
-
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function redirectHome() {
     window.location.assign("/");
+}
+
+let local_countdown_timer = null;
+let local_countdown_ticks = 0;
+let local_remaining_seconds = 0;
+let local_total_seconds = 0;
+
+function stopLocalCountdown() {
+    if (local_countdown_timer) {
+        clearInterval(local_countdown_timer);
+        local_countdown_timer = null;
+    }
+
+    local_countdown_ticks = 0;
+}
+
+function startLocalCountdown(total_seconds, remaining_seconds) {
+    stopLocalCountdown();
+
+    local_total_seconds = total_seconds;
+    local_remaining_seconds = Math.max(0, Math.floor(remaining_seconds));
+    local_countdown_ticks = 0;
+
+    // Tick at most 4 times (between 5s heartbeats), no client clock involved.
+    local_countdown_timer = setInterval(() => {
+        local_countdown_ticks += 1;
+
+        local_remaining_seconds = Math.max(0, local_remaining_seconds - 1);
+        updateDeadline(local_total_seconds, local_remaining_seconds);
+
+        if (local_countdown_ticks >= 4 || local_remaining_seconds <= 0) {
+            stopLocalCountdown();
+        }
+    }, 1000);
 }
 
 async function touchSession(leaseId, mode) {
@@ -43,11 +66,12 @@ async function touchSession(leaseId, mode) {
 
     const data = await resp.json();
 
-    // Set skew once
-    if (!skew_set && data.server_now) {
-        skew_ms = new Date(data.server_now).getTime() - Date.now();
-        skew_set = true;
-    }
+    // Server is authoritative; update immediately from server values.
+    stopLocalCountdown();
+    updateDeadline(data.hard_limit, data.remaining);
+
+    // Then locally tick for the next 4 seconds only.
+    startLocalCountdown(data.hard_limit, data.remaining);
 
     return data;
 }
@@ -132,64 +156,44 @@ function formatDuration(seconds) {
     return `${s}s`;
 }
 
-function startCountdown(deadlineIso) {
-    const deadline = new Date(deadlineIso).getTime();
-    const total = Math.max(1, Math.floor((deadline - now_ms()) / 1000));
-
+function updateDeadline(total, seconds) {
     const remainingEl = document.getElementById("time-remaining");
     const barEl = document.getElementById("time-bar");
     const warnEl = document.getElementById("session-warning");
 
-    function tick() {
-        const now = now_ms();
-        const seconds = Math.max(0, Math.floor((deadline - now) / 1000));
-
-        if (remainingEl) {
-            remainingEl.textContent = formatDuration(seconds);
-        }
-
-        if (barEl) {
-            const pct = Math.max(0, (seconds / total) * 100);
-            barEl.style.width = pct + "%";
-
-            if (pct < 25) {
-                barEl.style.background = "#ffcc00";
-            }
-            if (pct < 10) {
-                barEl.style.background = "#ff4444";
-            }
-        }
-
-        if (warnEl) {
-            warnEl.style.display = seconds <= 60 ? "block" : "none";
-        }
-
-        if (seconds <= 0) {
-            // Display-only: server is authoritative for expiry.
-           if (remainingEl) {
-               remainingEl.textContent = "0s";
-           }
-           if (warnEl) {
-               warnEl.style.display = "block";
-           }
-           return;
-        }
-
-        setTimeout(tick, 1000);
+    if (remainingEl) {
+        remainingEl.textContent = formatDuration(seconds);
     }
 
-    tick();
+    if (barEl) {
+        const pct = Math.max(0, (seconds / total) * 100);
+        barEl.style.width = pct + "%";
+
+        if (pct < 25) {
+            barEl.style.background = "#ffcc00";
+        }
+        if (pct < 10) {
+            barEl.style.background = "#ff4444";
+        }
+    }
+
+    if (warnEl) {
+        warnEl.style.display = seconds <= 60 ? "block" : "none";
+    }
+
+    if (seconds <= 0) {
+        // Display-only: server is authoritative for expiry.
+        if (remainingEl) {
+            remainingEl.textContent = "0s";
+        }
+        if (warnEl) {
+            warnEl.style.display = "block";
+        }
+    }
 }
 
 const sessionCard = document.getElementById("session-card");
 const leaseId = sessionCard ? sessionCard.dataset.leaseId : null;
-
-if (sessionCard) {
-    const hardDeadline = sessionCard.dataset.hardDeadline;
-    if (hardDeadline) {
-        startCountdown(hardDeadline);
-    }
-}
 
 // Poll the server, so we bounce quickly if the lease is ended by reaper/manual release.
 if (leaseId) {
