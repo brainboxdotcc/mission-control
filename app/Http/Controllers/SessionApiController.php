@@ -54,7 +54,7 @@ final class SessionApiController extends Controller
         return response()->json([
             'ok' => true,
             'server_now' => $now->toIso8601String(),
-            'remaining' => (int)max(0, $lease->hard_deadline_at->getTimestamp() - time()),
+            'remaining' => (int)max(0, $lease->hard_deadline_at->getTimestamp() - $now->getTimestamp()),
             'hard_limit' => (int)config("mission-control.limits.hard_seconds"),
             'hard_deadline_at' => $lease->hard_deadline_at->toIso8601String(),
             'idle_deadline_at' => $lease->idle_deadline_at->toIso8601String(),
