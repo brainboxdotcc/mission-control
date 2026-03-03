@@ -35,8 +35,8 @@ Nothing persists. Every session is isolated, and the base image is never modifie
 * Composer
 * Node 18+
 * MySQL / MariaDB
-* QEMU installed
-* Apache or Nginx with WebSocket proxy support
+* QEMU 10.1
+* Apache 2.4 with WebSocket proxy support
 
 ---
 
@@ -301,20 +301,6 @@ MISSION_CONTROL_QEMU_EXTRA_ARGS_JSON=[]
 
 ---
 
-# WebSocket Forwarding
-
-Each slot exposes a local WebSocket port:
-
-| Slot | Port |
-| ---- | ---- |
-| 0    | 5701 |
-| 1    | 5702 |
-| 2    | 5703 |
-
-You must proxy `/vnc/{slot}/` to the matching port.
-
----
-
 ## Apache
 
 Enable:
@@ -322,51 +308,6 @@ Enable:
 ```bash
 a2enmod proxy
 a2enmod proxy_wstunnel
-```
-
-VirtualHost:
-
-```apache
-ProxyPreserveHost On
-
-ProxyPass        /vnc/0/  ws://127.0.0.1:5701/
-ProxyPassReverse /vnc/0/  ws://127.0.0.1:5701/
-
-ProxyPass        /vnc/1/  ws://127.0.0.1:5702/
-ProxyPassReverse /vnc/1/  ws://127.0.0.1:5702/
-
-ProxyPass        /vnc/2/  ws://127.0.0.1:5703/
-ProxyPassReverse /vnc/2/  ws://127.0.0.1:5703/
-```
-
----
-
-## Nginx
-
-```nginx
-location /vnc/0/ {
-    proxy_pass http://127.0.0.1:5701/;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-}
-
-location /vnc/1/ {
-    proxy_pass http://127.0.0.1:5702/;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-}
-
-location /vnc/2/ {
-    proxy_pass http://127.0.0.1:5703/;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-}
 ```
 
 ---
@@ -385,16 +326,6 @@ When time expires:
 * Slot is freed
 
 No state survives.
-
----
-
-# Production Advice
-
-* Use HTTPS
-* Disable `APP_DEBUG`
-* Bind QEMU to `127.0.0.1` only
-* Firewall ports 5701-5703
-* Monitor storage usage
 
 ---
 

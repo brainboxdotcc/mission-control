@@ -22,13 +22,13 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 <IfModule proxy_wstunnel_module>
 
     # Slots 1–9  → 5901–5909
-    RewriteRule ^([1-9])$ ws://127.0.0.1:590$1/ [P,L]
+    RewriteRule ^([1-9])$ ws://127.0.0.1:570$1/ [P,L]
 
     # Slots 10–99 → 5910–5999
-    RewriteRule ^([1-9][0-9])$ ws://127.0.0.1:59$1/ [P,L]
+    RewriteRule ^([1-9][0-9])$ ws://127.0.0.1:57$1/ [P,L]
 
 </IfModule>
 </IfModule>
 
-# Anything else under /vnc/ → 404
+# Anything else under /vnc/ -> 404
 RewriteRule ^ - [R=404,L]

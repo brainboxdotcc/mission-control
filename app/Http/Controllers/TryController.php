@@ -69,7 +69,7 @@ final class TryController extends Controller
 
         return view('try.session', [
             'slot' => $lease->slot->slot_index,
-            'ws_path' => '/vnc/' . $lease->slot->slot_index . '/',
+            'ws_path' => '/vnc/' . $lease->slot->slot_index,
             'lease_id' => $lease->id,
             'hard_deadline' => $lease->hard_deadline_at,
             'idle_deadline' => $lease->idle_deadline_at,
