@@ -1,0 +1,34 @@
+RewriteEngine On
+
+# -------------------------------------------------------
+# Mission Control WebSocket VNC proxy
+# -------------------------------------------------------
+
+# Only handle WebSocket upgrade requests
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+
+# If required proxy modules are missing, fail with 503
+<IfModule !proxy_module>
+    RewriteRule ^ - [R=503,L]
+</IfModule>
+
+<IfModule !proxy_wstunnel_module>
+    RewriteRule ^ - [R=503,L]
+</IfModule>
+
+# If modules are present, proxy valid slot numbers
+<IfModule proxy_module>
+<IfModule proxy_wstunnel_module>
+
+    # Slots 1–9  → 5901–5909
+    RewriteRule ^([1-9])$ ws://127.0.0.1:590$1/ [P,L]
+
+    # Slots 10–99 → 5910–5999
+    RewriteRule ^([1-9][0-9])$ ws://127.0.0.1:59$1/ [P,L]
+
+</IfModule>
+</IfModule>
+
+# Anything else under /vnc/ → 404
+RewriteRule ^ - [R=404,L]
