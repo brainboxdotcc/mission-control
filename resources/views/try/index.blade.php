@@ -32,13 +32,18 @@
             </div>
 
             <div style="margin-left: auto; margin-right: auto; width: 16em; display:flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 3em; padding-bottom: 3em">
-                <form method="post" action="{{ route('try.start') }}" id="try-form">
-                    @csrf
-                    <button class="btn primary" type="submit" id="try-button">
-                        Start session
-                    </button>
-                </form>
-
+                @if ($slots_available)
+                    <form method="post" action="{{ route('try.start') }}" id="try-form">
+                        @csrf
+                        <button class="btn primary" type="submit" id="try-button">
+                            Start session
+                        </button>
+                    </form>
+                @else
+                    <div class="alert alert-warning">
+                        All demo slots are currently busy. Please try again shortly.
+                    </div>
+                @endif
                 <a class="btn" href=" {{ config('mission-control.branding.url') }}" target="_blank" rel="noreferrer">
                     Learn more
                 </a>
@@ -57,16 +62,16 @@
 
             <ul style="margin:0; padding-left: 18px; line-height: 1.6;">
                 <li>
-                    Each session runs for up to <strong>30 minutes</strong>.
+                    Each session runs for up to <strong>{{asInt(config("mission-control.limits.hard_seconds")) / 60}} minutes</strong>.
                 </li>
                 <li>
-                    If you leave it idle for a couple of minutes, it will end automatically so someone else can try.
+                    If you leave it idle, it will end automatically so someone else can try.
                 </li>
                 <li>
                     Every session starts fresh - anything you change disappears when you close it.
                 </li>
                 <li>
-                    Up to <strong>3 people</strong> can run a session at the same time.
+                    Up to <strong>{{$slots_max}} people</strong> can run a session at the same time.
                     If it's full, just try again shortly.
                 </li>
             </ul>

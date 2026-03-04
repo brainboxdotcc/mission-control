@@ -137,3 +137,31 @@ a {
     background: #000;
     overflow: hidden;
 }
+
+.alert {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #1e1e1e;
+    color: #e6e6e6;
+    font-size: 14px;
+}
+
+.alert-warning {
+    border-color: #b98900;
+    background: #2a2100;
+    color: #ffd966;
+}
+
+.alert-success {
+    border-color: #2f8f2f;
+    background: #0f2a0f;
+    color: #a6f3a6;
+}
+
+.alert-error {
+    border-color: #b33a3a;
+    background: #2a1010;
+    color: #ffb3b3;
+}

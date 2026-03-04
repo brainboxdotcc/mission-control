@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $bind_host
  * @property bool $in_use
  * @property string|null $current_lease_id
+ * @method static int count()
  */
 final class VmSlot extends Model
 {

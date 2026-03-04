@@ -17,7 +17,12 @@ final class TryController extends Controller
 {
     public function index(): View
     {
-        return view('try.index');
+        $slotsAvailable = VmSlot::query()
+            ->where('in_use', false)
+            ->exists();
+        $slotsMax = VmSlot::count();
+
+        return view('try.index', ['slots_available' => $slotsAvailable, 'slots_max' => $slotsMax]);
     }
 
     /**
