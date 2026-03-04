@@ -15,18 +15,6 @@ Just Laravel, QEMU and a web server.
 
 ---
 
-# What It Does
-
-When someone clicks **Start session**, Mission Control selects a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
-
-The browser connects via WebSocket to a localhost VNC server, and the guest operating system appears inside the page via noVNC.
-
-Each session has strict idle and maximum runtime limits. When time runs out or the user leaves, the virtual machine is terminated, its overlay disk is deleted, and the slot is freed for the next visitor.
-
-Nothing persists between sessions. Each run is isolated, and the base disk image is never modified.
-
----
-
 # Requirements
 
 * Linux host
@@ -80,34 +68,7 @@ php artisan key:generate
 
 ---
 
-## 4. Run database migrations
-
-Mission Control requires its database tables before it can allocate VM slots or track leases.
-
-Run:
-
-```bash
-php artisan migrate
-php artisan db:seed
-```
-
-After migrations complete, the application is ready to start launching sessions.
-
----
-
-## 5. Scheduler
-
-Mission Control relies on Laravel's scheduler to perform periodic maintenance tasks.
-
-Add a cron entry for your **application user** (not root):
-
-```bash
-* * * * * cd /path/to/mission-control && php artisan schedule:run >> /dev/null 2>&1
-```
-
----
-
-# Configure Environment
+## 4. Configure Environment
 
 Example `.env`:
 
@@ -117,7 +78,9 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://try.example.com
 
+# How many seconds a user may stay connected to a VM in total
 MISSION_CONTROL_HARD_SECONDS=1800
+# How many seconds a user may remain idle
 MISSION_CONTROL_IDLE_SECONDS=120
 
 MISSION_CONTROL_BASE_IMAGE=/home/missionctl/base.img
@@ -142,6 +105,27 @@ DB_PASSWORD="xxxxxxx"
 
 ---
 
+## 5. Run database migrations
+
+Ensure your database is created and accessible as in your `.env` and run:
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+---
+
+## 6. Scheduler
+
+Add a cron entry (`crontab -e`) for your **application user**:
+
+```bash
+* * * * * cd /path/to/mission-control && php artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
 # QEMU Configuration
 
 Mission Control builds the QEMU command safely from structured configuration.
@@ -152,7 +136,7 @@ Configuration is controlled through environment variables.
 
 ---
 
-# Boot Modes
+## Boot Modes
 
 Mission Control supports three boot modes.
 
@@ -166,7 +150,7 @@ Overlay disks are **always attached**. Boot mode only changes device priority.
 
 ---
 
-## HDD Boot (Default for Retro Rocket)
+### HDD Boot (Default for Retro Rocket)
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=disk
@@ -177,7 +161,7 @@ The overlay disk is created from the base image and used as the primary boot dev
 
 ---
 
-## CD-ROM Boot (Installer / Live ISO)
+### CD-ROM Boot (Installer / Live ISO)
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=cdrom
@@ -195,7 +179,7 @@ Suitable for Linux installers or live systems.
 
 ---
 
-## USB Boot
+### USB Boot
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=usb
@@ -213,7 +197,7 @@ Useful for prebuilt appliance-style OS images.
 
 ---
 
-# VM Sizing & Behaviour
+## VM Sizing & Behaviour
 
 Machine configuration:
 
@@ -243,7 +227,7 @@ MISSION_CONTROL_QEMU_INTERNAL_LOG_FLAGS=guest_errors
 
 ---
 
-# Advanced: Extra QEMU Arguments
+## Extra QEMU Arguments
 
 For advanced use cases.
 
@@ -270,28 +254,9 @@ Mission Control proxies WebSocket traffic to QEMU's VNC server via Apache.
 
 ---
 
-# Runtime Limits
-
-```env
-MISSION_CONTROL_HARD_SECONDS=1800
-MISSION_CONTROL_IDLE_SECONDS=120
-```
-
-When limits are exceeded:
-
-* The VM process is terminated
-* Overlay disk is deleted
-* The VM slot is freed
-
-No state survives between sessions.
-
----
-
 # Operational Commands
 
 Mission Control includes several Artisan commands for operational management.
-
-All commands use the standard `app:` namespace.
 
 ---
 
@@ -301,14 +266,7 @@ All commands use the standard `app:` namespace.
 php artisan app:reap
 ```
 
-Performs automated cleanup tasks:
-
-* Terminates expired leases
-* Detects missing or crashed QEMU processes
-* Frees slots stuck in `in_use` state
-* Deletes overlay disks
-
-This command is executed automatically by Laravel's scheduler.
+Performs automated cleanup tasks
 
 ---
 
@@ -317,14 +275,6 @@ This command is executed automatically by Laravel's scheduler.
 ```
 php artisan app:stat
 ```
-
-Displays:
-
-* Total VM slots
-* Slots currently in use
-* Free capacity
-* Active leases
-* Remaining runtime per slot
 
 Useful for quick operational checks.
 
@@ -338,8 +288,6 @@ php artisan app:leases
 
 Shows currently active VM leases.
 
-Options may include viewing ended leases or JSON output depending on the installation.
-
 ---
 
 ## Terminate a Lease
@@ -350,13 +298,6 @@ php artisan app:kill {leaseId}
 
 Immediately terminates a running session.
 
-Actions performed:
-
-* Sends a termination signal to QEMU
-* Deletes the overlay disk
-* Marks the lease as ended
-* Frees the associated slot
-
 ---
 
 ## Terminate a Slot
@@ -366,8 +307,6 @@ php artisan app:slotkill {slot}
 ```
 
 Kills whichever lease is currently running in a given VM slot.
-
-This is useful when you know the slot number but not the lease ID.
 
 ---
 
