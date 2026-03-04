@@ -77,7 +77,7 @@
                 window.addEventListener("touchstart", on_input, { passive: true });
                 window.addEventListener("pointerdown", on_input, { passive: true });
 
-                // Heartbeat proves the client is alive; doesn’t extend idle by policy above.
+                // Heartbeat proves the client is alive; doesn't extend idle by policy above.
                 setInterval(() => {
                     touch("heartbeat");
                 }, 15000);

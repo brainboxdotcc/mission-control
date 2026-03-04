@@ -2,8 +2,7 @@
 
 ## Launch a real operating system in the browser. Safely.
 
-Mission Control is a Laravel 12 application that spins up temporary QEMU virtual machines, exposes them via WebSocket,
-and renders them using noVNC - all inside your browser.
+Mission Control is a Laravel 12 application that spins up temporary QEMU virtual machines, exposes them via WebSocket, and renders them using noVNC - all inside your browser.
 
 <img width="1411" height="1027" alt="image" src="https://github.com/user-attachments/assets/5acc878a-dc9a-45f9-a993-6cbfce3361b9" />
 
@@ -18,13 +17,13 @@ Just Laravel, QEMU and a web server.
 
 # What It Does
 
-When someone clicks "Start session", Mission Control picks a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
-The browser connects to it over WebSocket via VNC, and the operating system appears in the page.
+When someone clicks **Start session**, Mission Control selects a free VM slot, creates a temporary overlay disk, and launches QEMU locally.
 
-Each session has strict idle and maximum runtime limits. When time runs out or the user leaves,
-the virtual machine is stopped, its overlay disk is deleted, and the slot is freed for the next person.
+The browser connects via WebSocket to a localhost VNC server, and the guest operating system appears inside the page via noVNC.
 
-Nothing persists. Every session is isolated, and the base image is never modified.
+Each session has strict idle and maximum runtime limits. When time runs out or the user leaves, the virtual machine is terminated, its overlay disk is deleted, and the slot is freed for the next visitor.
+
+Nothing persists between sessions. Each run is isolated, and the base disk image is never modified.
 
 ---
 
@@ -42,27 +41,16 @@ Nothing persists. Every session is isolated, and the base image is never modifie
 
 # Very Important: User & Permissions
 
-Mission Control **must not**:
+Mission Control **must not** run as `root` or run as `www-data`
 
-* Run as `root`
-* Run as `www-data`
-
-Create a dedicated user (example):
+Create a dedicated user:
 
 ```bash
 sudo adduser missionctl
 sudo usermod -aG kvm missionctl
 ```
 
-Your web server / PHP-FPM should run as this user.
-
-This user must:
-
-* Be able to execute `qemu-system-x86_64`
-* Have write access to `storage/`
-* Not have root privileges
-
-This keeps QEMU contained and prevents privilege escalation.
+Your web PHP-FPM pool should run as this user. This user must be able to execute QEMU, and have write access to `storage/`.
 
 ---
 
@@ -90,33 +78,36 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### 4. Set Up the Scheduler (Required)
+---
 
-Mission Control relies on Laravel’s scheduler to:
+## 4. Run database migrations
 
-* Reap expired leases
-* Kill orphaned QEMU processes
-* Clean up overlay disks
+Mission Control requires its database tables before it can allocate VM slots or track leases.
 
-Without this, sessions will not be cleaned up automatically.
-
-Add a cron entry for your **application user** (not root):
+Run:
 
 ```bash
-crontab -e
+php artisan migrate
+php artisan db:seed
 ```
 
-Add the following line:
+After migrations complete, the application is ready to start launching sessions.
+
+---
+
+## 5. Scheduler
+
+Mission Control relies on Laravel's scheduler to perform periodic maintenance tasks.
+
+Add a cron entry for your **application user** (not root):
 
 ```bash
 * * * * * cd /path/to/mission-control && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Replace `/path/to/mission-control` with the full path to your installation.
+---
 
-This runs the scheduler once per minute and ensures expired sessions are reclaimed properly.
-
-## 5. Edit the .env file
+# Configure Environment
 
 Example `.env`:
 
@@ -149,32 +140,21 @@ DB_USERNAME=try
 DB_PASSWORD="xxxxxxx"
 ```
 
-## 6. Run migrations:
-
-```bash
-php artisan migrate
-```
-
 ---
 
 # QEMU Configuration
 
 Mission Control builds the QEMU command safely from structured configuration.
 
-It always:
+It always attaches a per-session overlay disk, binds VNC and WebSocket to localhost and uses OVMF firmware (UEFI)
 
-* Attaches a per-session overlay disk
-* Binds VNC and WebSocket to localhost
-* Detaches cleanly from PHP
-* Uses OVMF firmware (UEFI)
-
-You control behaviour via environment variables.
+Configuration is controlled through environment variables.
 
 ---
 
 # Boot Modes
 
-Mission Control supports three boot modes:
+Mission Control supports three boot modes.
 
 | Mode  | Description                     |
 | ----- | ------------------------------- |
@@ -182,27 +162,22 @@ Mission Control supports three boot modes:
 | cdrom | Boot from ISO                   |
 | usb   | Boot from USB image             |
 
-Overlay disks are **always attached**.
-Boot mode only changes device priority.
+Overlay disks are **always attached**. Boot mode only changes device priority.
 
 ---
 
-## 1. HDD Boot (Default - Retro Rocket)
-
-This is the standard configuration.
+## HDD Boot (Default for Retro Rocket)
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=disk
 MISSION_CONTROL_BASE_IMAGE=/home/missionctl/retro-rocket.img
 ```
 
-This boots from the overlay disk based on your base image.
-
-Nothing else required.
+The overlay disk is created from the base image and used as the primary boot device.
 
 ---
 
-## 2. CD-ROM Boot (Installer / Live ISO)
+## CD-ROM Boot (Installer / Live ISO)
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=cdrom
@@ -213,18 +188,14 @@ Behaviour:
 
 * ISO attached as CD device
 * Overlay disk remains attached
-* CD gets boot priority
+* CD receives boot priority
 * Overlay becomes install target
 
-Perfect for:
-
-* Linux installers
-* Live ISOs
-* Rescue environments
+Suitable for Linux installers or live systems.
 
 ---
 
-## 3. USB Boot
+## USB Boot
 
 ```env
 MISSION_CONTROL_QEMU_BOOT_MODE=usb
@@ -234,21 +205,17 @@ MISSION_CONTROL_QEMU_USB_FORMAT=raw
 
 Behaviour:
 
-* USB image attached as mass storage
-* Overlay disk still attached
-* USB boots first
+* USB mass-storage device attached
+* Overlay disk remains attached
+* USB device receives boot priority
 
-Useful for:
-
-* Prebuilt USB-style OS images
-* Embedded-style systems
-* Custom test builds
+Useful for prebuilt appliance-style OS images.
 
 ---
 
 # VM Sizing & Behaviour
 
-You can control machine parameters:
+Machine configuration:
 
 ```env
 MISSION_CONTROL_QEMU_MACHINE=q35
@@ -258,7 +225,7 @@ MISSION_CONTROL_QEMU_SMP=4
 MISSION_CONTROL_QEMU_MEM_MB=2048
 ```
 
-Networking (default: user-mode NAT):
+Networking (default user-mode NAT):
 
 ```env
 MISSION_CONTROL_QEMU_NET_ENABLED=true
@@ -266,7 +233,7 @@ MISSION_CONTROL_QEMU_NET_MODE=user
 MISSION_CONTROL_QEMU_NET_NIC=e1000
 ```
 
-Logging options:
+Logging:
 
 ```env
 MISSION_CONTROL_QEMU_DEBUGCON_ENABLED=true
@@ -278,37 +245,28 @@ MISSION_CONTROL_QEMU_INTERNAL_LOG_FLAGS=guest_errors
 
 # Advanced: Extra QEMU Arguments
 
-For advanced use only.
+For advanced use cases.
 
-Provide additional arguments as a JSON array:
+Arguments must be provided as a JSON array:
 
 ```env
 MISSION_CONTROL_QEMU_EXTRA_ARGS_JSON=["-display","none"]
 ```
 
-Notes:
-
-* Must be valid JSON
-* Must be an array of strings
-* Cannot override overlay, pidfile, or VNC arguments
-* Intended for advanced experimentation
-
-If you don’t need it, leave it as:
-
-```env
-MISSION_CONTROL_QEMU_EXTRA_ARGS_JSON=[]
-```
+The extra arguments must be avalid JSON array of strings and cannot override internal arguments such as overlay disks.
 
 ---
 
-## Apache
+# Apache Configuration
 
-Enable:
+Enable required modules:
 
 ```bash
 a2enmod proxy
 a2enmod proxy_wstunnel
 ```
+
+Mission Control proxies WebSocket traffic to QEMU's VNC server via Apache.
 
 ---
 
@@ -319,38 +277,131 @@ MISSION_CONTROL_HARD_SECONDS=1800
 MISSION_CONTROL_IDLE_SECONDS=120
 ```
 
-When time expires:
+When limits are exceeded:
 
-* QEMU receives SIGKILL
+* The VM process is terminated
 * Overlay disk is deleted
-* Slot is freed
+* The VM slot is freed
 
-No state survives.
+No state survives between sessions.
+
+---
+
+# Operational Commands
+
+Mission Control includes several Artisan commands for operational management.
+
+All commands use the standard `app:` namespace.
+
+---
+
+## Clean Up Expired Sessions
+
+```
+php artisan app:reap
+```
+
+Performs automated cleanup tasks:
+
+* Terminates expired leases
+* Detects missing or crashed QEMU processes
+* Frees slots stuck in `in_use` state
+* Deletes overlay disks
+
+This command is executed automatically by Laravel's scheduler.
+
+---
+
+## View System Status
+
+```
+php artisan app:stat
+```
+
+Displays:
+
+* Total VM slots
+* Slots currently in use
+* Free capacity
+* Active leases
+* Remaining runtime per slot
+
+Useful for quick operational checks.
+
+---
+
+## List Leases
+
+```
+php artisan app:leases
+```
+
+Shows currently active VM leases.
+
+Options may include viewing ended leases or JSON output depending on the installation.
+
+---
+
+## Terminate a Lease
+
+```
+php artisan app:kill {leaseId}
+```
+
+Immediately terminates a running session.
+
+Actions performed:
+
+* Sends a termination signal to QEMU
+* Deletes the overlay disk
+* Marks the lease as ended
+* Frees the associated slot
+
+---
+
+## Terminate a Slot
+
+```
+php artisan app:slotkill {slot}
+```
+
+Kills whichever lease is currently running in a given VM slot.
+
+This is useful when you know the slot number but not the lease ID.
+
+---
+
+## Configure VM Slot Count
+
+```
+php artisan app:slots:set {count}
+```
+
+Ensures the system contains slots `1..count`.
+
+This command **only creates missing slots** and does not delete existing rows.
+Historical lease records remain intact.
 
 ---
 
 # What This Is Not
 
-Mission Control is deliberately simple and VPS friendly. It does not rely on systemd units, background supervisors, 
-container orchestration, or root-level processes. There is no Docker requirement, no service manager layer, and no hidden
-daemon doing lifecycle work behind the scenes. Everything runs directly under your application user and is managed by
-Laravel itself.
+Mission Control is deliberately simple and VPS-friendly. It does not rely on systemd units, background supervisors,
+container orchestration, or root-level services. There is no daemon managing lifecycle events behind the scenes.
 
-It is also not a static-site project. Because it launches QEMU locally and proxies WebSockets to it, Mission Control
-cannot run on platforms such as GitHub Pages or other static-only hosting providers. It requires a real Linux server
-with QEMU installed and the ability to execute system binaries.
+Everything runs directly under your application user and is managed by Laravel itself. Mission Control is also
+**not a static-site project**. Because it launches QEMU locally and proxies WebSocket traffic, it requires a real
+Linux host capable of executing system binaries.
 
-If you need something that runs purely in the browser with no backend, this is not that. Mission Control is a
-server-side VM launcher with a browser front end - intentionally straightforward, but still a real hypervisor-backed
-system.
+If you need a purely client-side emulator, this project is not designed for that.
 
 ---
 
 # Typical Use Cases
 
-* OS demos
-* Retro computing platforms
+* OS demonstrations
+* Retro computing environments
 * Teaching sandboxes
-* CTF labs
+* CTF platforms
 * Installer testing
-* Browser-based experimentation
+* Browser-based operating system experimentation

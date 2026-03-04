@@ -25,8 +25,8 @@
                     </p>
 
                     <p class="note" style="margin:0 0 0 0;">
-                        It may take a few seconds to start (sometimes 10–15 seconds if the server’s busy).
-                        Once it’s ready, the screen will appear, and you can begin typing straight away.
+                        It may take a few seconds to start (sometimes 10–15 seconds if the server's busy).
+                        Once it's ready, the screen will appear, and you can begin typing straight away.
                     </p>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                 </li>
                 <li>
                     Up to <strong>3 people</strong> can run a session at the same time.
-                    If it’s full, just try again shortly.
+                    If it's full, just try again shortly.
                 </li>
             </ul>
 
