@@ -177,6 +177,8 @@ a {
     z-index: 9999;
     display: flex;
     gap: 10px;
+    transition: transform 120ms linear;
+    will-change: transform;
 }
 
 #softKeyboardBar button {

@@ -233,7 +233,49 @@ function setupSoftKeyboardUi(rfb) {
 
     document.body.appendChild(keyboardBar);
 
+    function updateKeyboardBarPosition() {
+        if (!window.visualViewport) {
+            return;
+        }
+
+        const vv = window.visualViewport;
+
+        // Space below the visual viewport = covered area (usually the soft keyboard).
+        const coveredBottom = Math.max(
+            0,
+            window.innerHeight - (vv.height + vv.offsetTop)
+        );
+
+        keyboardBar.style.transform = coveredBottom > 0
+            ? `translateY(-${coveredBottom}px)`
+            : "";
+    }
+
+    function addViewportListeners() {
+        if (!window.visualViewport) {
+            return;
+        }
+
+        window.visualViewport.addEventListener("resize", updateKeyboardBarPosition);
+        window.visualViewport.addEventListener("scroll", updateKeyboardBarPosition);
+
+        // Initial position (covers cases where keyboard is already up)
+        updateKeyboardBarPosition();
+    }
+
+    function removeViewportListeners() {
+        if (!window.visualViewport) {
+            return;
+        }
+
+        window.visualViewport.removeEventListener("resize", updateKeyboardBarPosition);
+        window.visualViewport.removeEventListener("scroll", updateKeyboardBarPosition);
+    }
+
+    addViewportListeners();
+
     rfb.addEventListener("disconnect", () => {
+        removeViewportListeners();
         releaseModifiers();
         keyboardBar.remove();
         keyboardInput.remove();
