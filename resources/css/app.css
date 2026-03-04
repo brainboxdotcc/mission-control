@@ -24,7 +24,7 @@ a {
 }
 
 .wrap {
-    max-width: 1100px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 24px 16px;
 }
@@ -131,7 +131,7 @@ a {
 
 .terminal {
     width: 100%;
-    height: min(72vh, 760px);
+    height: min(72vh, 1280px);
     border-radius: 14px;
     border: 1px solid var(--border);
     background: #000;
@@ -164,4 +164,8 @@ a {
     border-color: #b33a3a;
     background: #2a1010;
     color: #ffb3b3;
+}
+
+#screen div {
+    background: none !important;
 }
