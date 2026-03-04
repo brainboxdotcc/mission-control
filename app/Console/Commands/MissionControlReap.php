@@ -3,16 +3,17 @@
 namespace App\Console\Commands;
 
 use App\Models\VmLease;
-use App\Models\VmSlot;
+use App\Traits\TerminatesSessions;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 final class MissionControlReap extends Command
 {
-    protected $signature = 'mission-control:reap';
+    use TerminatesSessions;
 
-    protected $description = 'Reap expired or dead VM leases.';
+    protected $signature = 'app:reap';
+
+    protected $description = 'Clean up expired VM leases and detect dead processes.';
 
     public function handle(): int
     {
@@ -27,7 +28,7 @@ final class MissionControlReap extends Command
             ->get();
 
         foreach ($leases as $lease) {
-            $this->terminateLease($lease, 'expired');
+            $this->terminateLease($lease, 'expired', true);
         }
 
         // Also detect dead PIDs
@@ -38,35 +39,11 @@ final class MissionControlReap extends Command
 
         foreach ($active as $lease) {
             if (!$this->pidExists($lease->pid)) {
-                $this->terminateLease($lease, 'process_missing');
+                $this->terminateLease($lease, 'process_missing', true);
             }
         }
 
         return self::SUCCESS;
-    }
-
-    private function terminateLease(VmLease $lease, string $reason): void
-    {
-        DB::transaction(function () use ($lease, $reason): void {
-            if ($lease->pid !== null) {
-                @posix_kill($lease->pid, 15);
-            }
-
-            if ($lease->overlay_path !== null && is_file($lease->overlay_path)) {
-                @unlink($lease->overlay_path);
-            }
-
-            $lease->ended_at = Carbon::now();
-            $lease->end_reason = $reason;
-            $lease->save();
-
-            VmSlot::query()
-                ->where('id', $lease->vm_slot_id)
-                ->update([
-                    'in_use' => false,
-                    'current_lease_id' => null,
-                ]);
-        });
     }
 
     private function pidExists(?int $pid): bool

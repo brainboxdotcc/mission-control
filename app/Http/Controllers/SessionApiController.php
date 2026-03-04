@@ -15,20 +15,24 @@ use Psr\Container\NotFoundExceptionInterface;
 
 final class SessionApiController extends Controller
 {
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function touch(TouchSessionRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
-        $token = $this->tokenForLease($validated['lease_id']);
+        $token = $this->tokenForLease(asString($validated['lease_id']));
         if ($token === null) {
             return response()->json(['message' => 'Invalid session.'], 403);
         }
 
-        $token_hash = hash('sha256', $token);
+        $tokenHash = hash('sha256', $token);
 
         $lease = VmLease::query()
             ->where('id', $validated['lease_id'])
-            ->where('token_hash', $token_hash)
+            ->where('token_hash', $tokenHash)
             ->first();
 
         if ($lease === null) {
@@ -40,13 +44,13 @@ final class SessionApiController extends Controller
         }
 
         $now = Carbon::now();
-        $idle_seconds = (int) config('mission-control.limits.idle_seconds');
-        $mode = (string) ($validated['mode'] ?? 'input');
+        $idleSeconds = asInt(config('mission-control.limits.idle_seconds'));
+        $mode = asString($validated['mode'] ?? 'input');
 
         $lease->last_activity_at = $now;
 
         if ($mode === 'input') {
-            $lease->idle_deadline_at = $now->copy()->addSeconds($idle_seconds);
+            $lease->idle_deadline_at = $now->copy()->addSeconds($idleSeconds);
         }
 
         $lease->save();
@@ -55,7 +59,7 @@ final class SessionApiController extends Controller
             'ok' => true,
             'server_now' => $now->toIso8601String(),
             'remaining' => (int)max(0, $lease->hard_deadline_at->getTimestamp() - $now->getTimestamp()),
-            'hard_limit' => (int)config("mission-control.limits.hard_seconds"),
+            'hard_limit' => asInt(config("mission-control.limits.hard_seconds")),
             'hard_deadline_at' => $lease->hard_deadline_at->toIso8601String(),
             'idle_deadline_at' => $lease->idle_deadline_at->toIso8601String(),
         ]);
@@ -69,7 +73,7 @@ final class SessionApiController extends Controller
     {
         $validated = $request->validated();
 
-        $token = $this->tokenForLease($validated['lease_id']);
+        $token = $this->tokenForLease(asString($validated['lease_id']));
         if ($token === null) {
             return response()->json(['message' => 'Invalid session.'], 403);
         }
@@ -93,7 +97,7 @@ final class SessionApiController extends Controller
 
             $pid = $lease->pid;
             if (is_int($pid) && $pid > 0) {
-                @posix_kill($pid, 15);
+                @posix_kill($pid, 9);
 
                 // Give it a moment to exit cleanly
                 for ($i = 0; $i < 20; $i++) {

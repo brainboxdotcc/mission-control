@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use InvalidArgumentException;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -38,17 +39,17 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('session-touch', function (Request $request): Limit {
-            $lease_id = (string) $request->input('lease_id', '');
+            $leaseId = asString($request->input('lease_id', ''));
             $ip = (string) $request->ip();
 
-            return Limit::perMinute(120)->by($ip . '|' . $lease_id);
+            return Limit::perMinute(120)->by($ip . '|' . $leaseId);
         });
 
         RateLimiter::for('session-release', function (Request $request): Limit {
-            $lease_id = (string) $request->input('lease_id', '');
+            $leaseId = asString($request->input('lease_id', ''));
             $ip = (string) $request->ip();
 
-            return Limit::perMinute(30)->by($ip . '|' . $lease_id);
+            return Limit::perMinute(30)->by($ip . '|' . $leaseId);
         });
     }
 
@@ -57,7 +58,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function configureRateLimiting()
+    protected function configureRateLimiting(): void
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());

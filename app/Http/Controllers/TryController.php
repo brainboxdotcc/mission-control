@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\VmLease;
+use App\Models\VmSlot;
 use App\Services\LeaseAllocator;
 use App\Services\VmLauncher;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -63,6 +64,9 @@ final class TryController extends Controller
         }
     }
 
+    /**
+     * @param VmLease&object{slot:VmSlot} $lease
+     */
     public function session(VmLease $lease): View
     {
         $lease->loadMissing('slot');

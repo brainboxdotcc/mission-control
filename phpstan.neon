@@ -1,0 +1,8 @@
+parameters:
+    treatPhpDocTypesAsCertain: false
+    level: max
+    paths:
+        - app
+    tmpDir: /tmp/phpstan-mission-control
+includes:
+    - vendor/larastan/larastan/extension.neon

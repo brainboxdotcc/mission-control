@@ -19,7 +19,7 @@ final class VmSlot extends Model
     protected $table = 'vm_slots';
 
     /**
-     * @var array<int,string>
+     * @var list<string>
      */
     protected $fillable = [
         'slot_index',
