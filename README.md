@@ -243,20 +243,19 @@ The extra arguments must be avalid JSON array of strings and cannot override int
 
 # Apache Configuration
 
-Enable required modules:
+you must enable these required modules for websocket proxy support:
 
 ```bash
 a2enmod proxy
+a2enmod redirect
 a2enmod proxy_wstunnel
 ```
-
-Mission Control proxies WebSocket traffic to QEMU's VNC server via Apache.
 
 ---
 
 # Operational Commands
 
-Mission Control includes several Artisan commands for operational management.
+Mission Control includes several Artisan commands:
 
 ---
 
@@ -334,13 +333,3 @@ Linux host capable of executing system binaries.
 
 If you need a purely client-side emulator, this project is not designed for that.
 
----
-
-# Typical Use Cases
-
-* OS demonstrations
-* Retro computing environments
-* Teaching sandboxes
-* CTF platforms
-* Installer testing
-* Browser-based operating system experimentation
