@@ -204,3 +204,38 @@ a {
     border-color: rgba(102, 204, 255, 0.9);
     background: rgba(102, 204, 255, 0.25);
 }
+
+.container {
+    width: 100%;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.py-5 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.display-4 {
+    font-size: 3.5rem;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.lead {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: #555;
+}
