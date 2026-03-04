@@ -1,6 +1,47 @@
 import RFB from "@novnc/novnc";
 
 const screen = document.getElementById("screen");
+let local_countdown_timer = null;
+let local_countdown_ticks = 0;
+let local_remaining_seconds = 0;
+let local_total_seconds = 0;
+let ctrlDown = false;
+let altDown = false;
+
+function setToggleState(button, isDown) {
+    button.classList.toggle("is-toggled", isDown);
+    button.setAttribute("aria-pressed", isDown ? "true" : "false");
+}
+
+function sendKeyEvent(keysym, code, isDown) {
+    rfb.sendKey(keysym, code, isDown);
+}
+
+function toggleCtrl() {
+    ctrlDown = !ctrlDown;
+    sendKeyEvent(0xffe3, "ControlLeft", ctrlDown);
+    setToggleState(ctrlButton, ctrlDown);
+}
+
+function toggleAlt() {
+    altDown = !altDown;
+    sendKeyEvent(0xffe9, "AltLeft", altDown);
+    setToggleState(altButton, altDown);
+}
+
+function releaseModifiers() {
+    if (ctrlDown) {
+        ctrlDown = false;
+        sendKeyEvent(0xffe3, "ControlLeft", false);
+        setToggleState(ctrlButton, false);
+    }
+
+    if (altDown) {
+        altDown = false;
+        sendKeyEvent(0xffe9, "AltLeft", false);
+        setToggleState(altButton, false);
+    }
+}
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -10,10 +51,194 @@ function redirectHome() {
     window.location.assign("/");
 }
 
-let local_countdown_timer = null;
-let local_countdown_ticks = 0;
-let local_remaining_seconds = 0;
-let local_total_seconds = 0;
+function useSoftKeyboardUi() {
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const noHover = window.matchMedia("(hover: none)").matches;
+
+    return coarsePointer && noHover;
+}
+
+function sendCharToRfb(rfb, ch) {
+    const codePoint = ch.codePointAt(0);
+    if (codePoint == null) {
+        return;
+    }
+
+    // X11 keysyms for Unicode are usually the Unicode code point for BMP chars.
+    // This works well for typical ASCII/Latin input on consoles.
+    rfb.sendKey(codePoint, null, true);
+    rfb.sendKey(codePoint, null, false);
+}
+
+function setupSoftKeyboardUi(rfb) {
+    if (!useSoftKeyboardUi()) {
+        return;
+    }
+
+    if (document.getElementById("softKeyboardBar")) {
+        return;
+    }
+
+    const keyboardInput = document.createElement("textarea");
+    keyboardInput.id = "softKeyboardInput";
+    keyboardInput.autocomplete = "off";
+    keyboardInput.autocapitalize = "off";
+    keyboardInput.spellcheck = false;
+    keyboardInput.inputMode = "text";
+
+    keyboardInput.style.position = "fixed";
+    keyboardInput.style.left = "-10000px";
+    keyboardInput.style.top = "0";
+    keyboardInput.style.width = "1px";
+    keyboardInput.style.height = "1px";
+    keyboardInput.style.opacity = "0";
+
+    document.body.appendChild(keyboardInput);
+
+    let lastValue = "";
+
+    function flushDiff() {
+        const value = keyboardInput.value;
+
+        if (value.length > lastValue.length && value.startsWith(lastValue)) {
+            const added = value.slice(lastValue.length);
+
+            for (const ch of added) {
+                sendCharToRfb(rfb, ch);
+            }
+
+            lastValue = value;
+            return;
+        }
+
+        if (value.length < lastValue.length && lastValue.startsWith(value)) {
+            const deletes = lastValue.length - value.length;
+
+            for (let i = 0; i < deletes; i += 1) {
+                rfb.sendKey(0xff08, "Backspace", true);
+                rfb.sendKey(0xff08, "Backspace", false);
+            }
+
+            lastValue = value;
+            return;
+        }
+
+        lastValue = value;
+    }
+
+    keyboardInput.addEventListener("beforeinput", (e) => {
+        if (e.inputType === "insertLineBreak") {
+            rfb.sendKey(0xff0d, "Enter", true);
+            rfb.sendKey(0xff0d, "Enter", false);
+        }
+
+        if (e.inputType === "deleteContentBackward") {
+            rfb.sendKey(0xff08, "Backspace", true);
+            rfb.sendKey(0xff08, "Backspace", false);
+        }
+    });
+
+    keyboardInput.addEventListener("input", () => {
+        flushDiff();
+
+        if (keyboardInput.value.length > 64) {
+            keyboardInput.value = "";
+            lastValue = "";
+        }
+    });
+
+    const keyboardBar = document.createElement("div");
+    keyboardBar.id = "softKeyboardBar";
+
+    const keyboardButton = document.createElement("button");
+    keyboardButton.id = "softKeyboardButton";
+    keyboardButton.type = "button";
+    keyboardButton.textContent = "⌨";
+
+    const ctrlButton = document.createElement("button");
+    ctrlButton.id = "softCtrlButton";
+    ctrlButton.type = "button";
+    ctrlButton.textContent = "Ctrl";
+
+    const altButton = document.createElement("button");
+    altButton.id = "softAltButton";
+    altButton.type = "button";
+    altButton.textContent = "Alt";
+
+    const escButton = document.createElement("button");
+    escButton.id = "softEscButton";
+    escButton.type = "button";
+    escButton.textContent = "Esc";
+
+    let ctrlDown = false;
+    let altDown = false;
+
+    function setToggleState(button, isDown) {
+        button.classList.toggle("is-toggled", isDown);
+        button.setAttribute("aria-pressed", isDown ? "true" : "false");
+    }
+
+    function sendKeyEvent(keysym, code, isDown) {
+        rfb.sendKey(keysym, code, isDown);
+    }
+
+    function toggleCtrl() {
+        ctrlDown = !ctrlDown;
+        sendKeyEvent(0xffe3, "ControlLeft", ctrlDown);
+        setToggleState(ctrlButton, ctrlDown);
+    }
+
+    function toggleAlt() {
+        altDown = !altDown;
+        sendKeyEvent(0xffe9, "AltLeft", altDown);
+        setToggleState(altButton, altDown);
+    }
+
+    function releaseModifiers() {
+        if (ctrlDown) {
+            ctrlDown = false;
+            sendKeyEvent(0xffe3, "ControlLeft", false);
+            setToggleState(ctrlButton, false);
+        }
+
+        if (altDown) {
+            altDown = false;
+            sendKeyEvent(0xffe9, "AltLeft", false);
+            setToggleState(altButton, false);
+        }
+    }
+
+    keyboardButton.addEventListener("click", () => {
+        keyboardInput.focus({ preventScroll: true });
+    });
+
+    ctrlButton.addEventListener("click", () => {
+        toggleCtrl();
+    });
+
+    altButton.addEventListener("click", () => {
+        toggleAlt();
+    });
+
+    escButton.addEventListener("click", () => {
+        rfb.sendKey(0xff1b, "Escape", true);
+        rfb.sendKey(0xff1b, "Escape", false);
+        releaseModifiers();
+    });
+
+    keyboardBar.appendChild(keyboardButton);
+    keyboardBar.appendChild(ctrlButton);
+    keyboardBar.appendChild(altButton);
+    keyboardBar.appendChild(escButton);
+
+    document.body.appendChild(keyboardBar);
+
+    rfb.addEventListener("disconnect", () => {
+        releaseModifiers();
+        keyboardBar.remove();
+        keyboardInput.remove();
+    });
+}
 
 function stopLocalCountdown() {
     if (local_countdown_timer) {
@@ -130,6 +355,7 @@ async function connectWithRetry(screenEl, wsUrl, leaseId) {
             rfb.scaleViewport = true;
             rfb.resizeSession = true;
             hookEvents(rfb, leaseId);
+            setupSoftKeyboardUi(rfb);
             return rfb;
         } catch (_) {
             setStatus("starting", "Starting...");
@@ -142,6 +368,7 @@ async function connectWithRetry(screenEl, wsUrl, leaseId) {
     rfb.scaleViewport = true;
     rfb.resizeSession = true;
     hookEvents(rfb, leaseId);
+    setupSoftKeyboardUi(rfb);
     return rfb;
 }
 
