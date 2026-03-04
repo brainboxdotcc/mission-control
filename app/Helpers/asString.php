@@ -14,6 +14,10 @@ if (!function_exists('asString')) {
             return (string)$value;
         }
 
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
         if (is_string($value)) {
             return $value;
         }

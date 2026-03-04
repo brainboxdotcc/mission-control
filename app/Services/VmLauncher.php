@@ -10,7 +10,7 @@ use App\Models\VmSlot;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
-final class VmLauncher
+class VmLauncher
 {
     public function ensureDirsExist(): void
     {

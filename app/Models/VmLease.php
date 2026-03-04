@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $ended_at
  * @property string|null $end_reason
  * @property VmSlot|BelongsTo<VmSlot,$this> $slot
+ * @method static create(array $array)
  */
 final class VmLease extends Model
 {

@@ -13,7 +13,7 @@ final class MissionControlSlotsSet extends Command
 
     public function handle(): int
     {
-        $count = (int) $this->argument('count');
+        $count = asInt($this->argument('count'));
 
         if ($count <= 0) {
             $this->error('Count must be greater than zero.');
@@ -30,7 +30,6 @@ final class MissionControlSlotsSet extends Command
         $created = 0;
 
         for ($n = 1; $n <= $count; $n++) {
-
             $exists = VmSlot::query()
                 ->where('slot_index', $n)
                 ->exists();
@@ -41,6 +40,9 @@ final class MissionControlSlotsSet extends Command
 
             $slot = new VmSlot();
             $slot->slot_index = $n;
+            $slot->display = $n;
+            $slot->ws_port = 5700 + $n;
+            $slot->bind_host = '127.0.0.1';
             $slot->in_use = false;
             $slot->current_lease_id = null;
             $slot->save();

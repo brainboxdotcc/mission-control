@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
-final class LeaseAllocator
+class LeaseAllocator
 {
     /**
      * @return array{lease:VmLease, token:string, slot:VmSlot}
