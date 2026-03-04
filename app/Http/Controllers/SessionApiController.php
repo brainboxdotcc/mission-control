@@ -84,7 +84,6 @@ final class SessionApiController extends Controller
             $lease = VmLease::query()
                 ->where('id', $validated['lease_id'])
                 ->where('token_hash', $tokenHash)
-                ->lockForUpdate()
                 ->first();
 
             if ($lease === null) {
