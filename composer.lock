@@ -3171,16 +3171,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.4.6",
+            "version": "v7.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "6d643a93b47398599124022eb24d97c153c12f27"
+                "reference": "1e92e39c51f95b88e3d66fa2d9f06d1fb45dd707"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/6d643a93b47398599124022eb24d97c153c12f27",
-                "reference": "6d643a93b47398599124022eb24d97c153c12f27",
+                "url": "https://api.github.com/repos/symfony/console/zipball/1e92e39c51f95b88e3d66fa2d9f06d1fb45dd707",
+                "reference": "1e92e39c51f95b88e3d66fa2d9f06d1fb45dd707",
                 "shasum": ""
             },
             "require": {
@@ -3245,7 +3245,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.4.6"
+                "source": "https://github.com/symfony/console/tree/v7.4.8"
             },
             "funding": [
                 {
@@ -3265,7 +3265,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-25T17:02:47+00:00"
+            "time": "2026-03-30T13:54:39+00:00"
         },
         {
             "name": "symfony/css-selector",
@@ -5156,16 +5156,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v7.4.6",
+            "version": "v7.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "9f209231affa85aa930a5e46e6eb03381424b30b"
+                "reference": "114ac57257d75df748eda23dd003878080b8e688"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/9f209231affa85aa930a5e46e6eb03381424b30b",
-                "reference": "9f209231affa85aa930a5e46e6eb03381424b30b",
+                "url": "https://api.github.com/repos/symfony/string/zipball/114ac57257d75df748eda23dd003878080b8e688",
+                "reference": "114ac57257d75df748eda23dd003878080b8e688",
                 "shasum": ""
             },
             "require": {
@@ -5223,7 +5223,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v7.4.6"
+                "source": "https://github.com/symfony/string/tree/v7.4.8"
             },
             "funding": [
                 {
@@ -5243,7 +5243,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-09T09:33:46+00:00"
+            "time": "2026-03-24T13:12:05+00:00"
         },
         {
             "name": "symfony/translation",
@@ -7197,23 +7197,23 @@
         },
         {
             "name": "robiningelbrecht/phpunit-coverage-tools",
-            "version": "v1.9.2",
+            "version": "v1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/robiningelbrecht/phpunit-coverage-tools.git",
-                "reference": "a10c12518338c256e478a24dba32b80b86905c96"
+                "reference": "f1766d7a78a4ddb1c5c436c49b032bbeb2833847"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/robiningelbrecht/phpunit-coverage-tools/zipball/a10c12518338c256e478a24dba32b80b86905c96",
-                "reference": "a10c12518338c256e478a24dba32b80b86905c96",
+                "url": "https://api.github.com/repos/robiningelbrecht/phpunit-coverage-tools/zipball/f1766d7a78a4ddb1c5c436c49b032bbeb2833847",
+                "reference": "f1766d7a78a4ddb1c5c436c49b032bbeb2833847",
                 "shasum": ""
             },
             "require": {
                 "ext-simplexml": "*",
                 "ext-xmlreader": "*",
                 "php": "^8.1",
-                "phpunit/phpunit": "^10.3||^11.0||^12.0",
+                "phpunit/phpunit": "^10.3||^11.0||^12.0||^13.0",
                 "symfony/console": "^5.4||^6.2||^7.0||^8.0"
             },
             "require-dev": {
@@ -7246,9 +7246,9 @@
             ],
             "support": {
                 "issues": "https://github.com/robiningelbrecht/phpunit-coverage-tools/issues",
-                "source": "https://github.com/robiningelbrecht/phpunit-coverage-tools/tree/v1.9.2"
+                "source": "https://github.com/robiningelbrecht/phpunit-coverage-tools/tree/v1.10.0"
             },
-            "time": "2025-11-27T15:13:35+00:00"
+            "time": "2026-03-11T08:53:15+00:00"
         },
         {
             "name": "sebastian/cli-parser",
