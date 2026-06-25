@@ -6,11 +6,11 @@
         "preview": "vite preview"
     },
     "devDependencies": {
-        "axios": "^1.15.0",
+        "axios": "^1.16.0",
         "laravel-vite-plugin": "^2.1.0",
         "lodash": "^4.17.19",
-        "postcss": "^8.1.14",
-        "vite": "^7.3.6"
+        "postcss": "^8.5.15",
+        "vite": "^8.1.0"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.2.0",
